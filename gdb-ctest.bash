@@ -1,0 +1,126 @@
+#!/bin/bash
+set -eu
+
+if [[ $# != 1 || "$1" = "--help" || "$1" = "-h" ]]; then
+    echo "$0 - runs a ctest inside gdb, including fixtures and environment"
+    echo "Usage: $0 <test_name>"
+    echo
+    echo "Options:"
+    echo "    <test_name>  Test to be ran. The same for 'ctest -R <test_name>'"
+    echo
+    echo "Information:"
+    echo "    - Run this in the same directory where you would run ctest."
+    echo "    - The test must have at most one FIXTURES_REQUIRED."
+    echo "    - The fixture must have at most one FIXTURES_SETUP and at most one FIXTURES_CLEANUP."
+    echo "    - That means that you can run tests that have ENVIRONMENT but no fixtures."
+    echo "    - You can run gdb repeatedly, if your test doesn't depend on redoing you fixtures on every run."
+    exit 1
+fi
+
+TEST_NAME="$1"
+
+DUMP="$(ctest --show-only=json-v1 -R "$TEST_NAME" | jq ".tests")"
+
+get_test_json()
+{
+    jq "map(select(.name == \"$1\"))[]" <<< "$DUMP"
+}
+
+get_test_command()
+{
+    get_test_json "$1" | jq -r ".command | join(\" \")"
+}
+
+get_test_property()
+{
+    get_test_json "$1" | jq -r ".properties | map(select(.name == \"$2\"))[].value | join(\" \")"
+}
+
+match_property()
+{
+    PROP_NAME="$1"
+    PROP_VALUE="$2"
+    # I need to find out who has the PROP_NAME property.
+    # The outer map(select()) looks at the .properties array and tries to filter it according to name and value. This
+    # can result into two things:
+    #   1) The test has the property name/value combo - then the result of the inner map is an non-empty array (containing the combo).
+    #   2) The test doesn't have the property name/value combo - the result is an empty array (because everything got filtered out).
+    #
+    # The outer map(select()) finds the desired test based on whether the filtered .properties is empty or not.
+    #
+    # CAVEAT: if more tests have the same property name/value combo, this will take the first one.
+    jq -r "map(select((.properties | map(select(.name == \"$PROP_NAME\" and .value[] == \"$PROP_VALUE\"))) != []))[].name" <<< "$DUMP"
+}
+
+get_test_environment()
+{
+    get_test_json "$1" | jq ".[].properties | map(select(.name == \"ENVIRONMENT\"))[].value"
+}
+
+# TEST_JSON="$(get_test_json "$TEST_NAME")"
+TEST_COMMAND="$(get_test_command "$TEST_NAME")"
+if [[ -z "$TEST_COMMAND" ]]; then
+    echo "Couldn't find a test named '$TEST_NAME'"
+    exit 1
+fi
+
+FIXTURES_REQUIRED="$(get_test_property "$TEST_NAME" "FIXTURES_REQUIRED")"
+SETUP_NAME=
+CLEANUP_NAME=
+
+if [[ -n "$FIXTURES_REQUIRED" ]]; then
+    SETUP_NAME="$(match_property "FIXTURES_SETUP" "$FIXTURES_REQUIRED")"
+    if [[ -n "$SETUP_NAME" ]]; then
+        SETUP_COMMAND="$(get_test_command $SETUP_NAME)"
+    fi
+
+    CLEANUP_NAME="$(match_property "FIXTURES_CLEANUP" "$FIXTURES_REQUIRED")"
+    if [[ -n "$CLEANUP_NAME" ]]; then
+        CLEANUP_COMMAND="$(get_test_command $CLEANUP_NAME)"
+    fi
+fi
+# echo "TEST_NAME         = $TEST_NAME"
+# echo "TEST_COMMAND      = $TEST_COMMAND"
+# echo "FIXTURES_REQUIRED = $FIXTURES_REQUIRED"
+# echo "SETUP_NAME        = $SETUP_NAME"
+# echo "SETUP_COMMAND     = $SETUP_COMMAND"
+# echo "CLEANUP_NAME      = $CLEANUP_NAME"
+# echo "CLEANUP_COMMAND   = $CLEANUP_COMMAND"
+
+SETUP=
+CLEANUP=
+
+if [[ -n "$SETUP_NAME" ]]; then
+    SETUP="$(get_test_property "$SETUP_NAME" "ENVIRONMENT") $SETUP_COMMAND"
+    echo "Will run this to setup fixture '$FIXTURES_REQUIRED':"
+    echo "  $" $SETUP
+    echo
+fi
+TEST="$(get_test_property "$TEST_NAME" "ENVIRONMENT") gdb --args $TEST_COMMAND"
+echo "Will run this as the test command for '$TEST_NAME' (gdb is included):"
+echo "  $" $TEST
+if [[ -n "$CLEANUP_NAME" ]]; then
+    echo
+    CLEANUP="$(get_test_property "$CLEANUP_NAME" "ENVIRONMENT") $CLEANUP_COMMAND"
+    echo "Will run this to cleanup fixture '$FIXTURES_REQUIRED':"
+    echo "  $" $CLEANUP
+fi
+
+echo
+
+read -r -p "Is that ok? [Y/n] " RESPONSE
+if [[ -z "$RESPONSE" ]]; then
+    RESPONSE=y
+fi
+RESPONSE="${RESPONSE,,}"    # tolower
+if ! [[ "$RESPONSE" =~ ^(yes|y)$ ]]; then
+    exit 0
+fi
+
+if [[ -n "$SETUP_NAME" ]]; then
+    env $SETUP
+fi
+env $TEST
+if [[ -n "$CLEANUP_NAME" ]]; then
+    env $CLEANUP
+fi
