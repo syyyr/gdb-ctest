@@ -9,11 +9,7 @@ if [[ $# != 1 || "$1" = "--help" || "$1" = "-h" ]]; then
     echo "    <test_name>  Test to be ran. The same for 'ctest -R <test_name>'"
     echo
     echo "Information:"
-    echo "    - Run this in the same directory where you would run ctest."
-    echo "    - The test must have at most one FIXTURES_REQUIRED."
-    echo "    - The fixture must have at most one FIXTURES_SETUP and at most one FIXTURES_CLEANUP."
-    echo "    - That means that you can run tests that have ENVIRONMENT but no fixtures."
-    echo "    - You can run gdb repeatedly, if your test doesn't depend on redoing you fixtures on every run."
+    echo "    For information and caveats, check README.md"
     exit 1
 fi
 
