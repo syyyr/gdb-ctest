@@ -21,7 +21,10 @@ gdb-ctest <test_name>
 
 ## Information/caveats
 - Run this in the same directory where you would run _ctest_.
+- The script supports the `ENVIRONMENT` property.
 - The test must have at most one `FIXTURES_REQUIRED`.
 - The fixture must have at most one `FIXTURES_SETUP` and at most one `FIXTURES_CLEANUP`.
-- That means that you can run tests that have `ENVIRONMENT` but no fixtures.
-- You can run the inside _gdb_ repeatedly, if your test doesn't depend on redoing fixtures on every run.
+- That means that you can run tests that have `ENVIRONMENT`, but no fixtures.
+- The script shows exactly what commands will it run for the setup, cleanup, and for the actual test command. It will
+  prompt you for confirmation before it runs anything.
+- You can use `run` inside _gdb_ repeatedly, if your test doesn't depend on redoing fixtures on every run.
