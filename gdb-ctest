@@ -24,19 +24,40 @@
 
 set -eu
 
-if [[ $# != 1 || "$1" = "--help" || "$1" = "-h" ]]; then
+print_usage()
+{
     echo "$0 - runs a ctest inside gdb, including fixtures and environment"
-    echo "Usage: $0 <test_name>"
+    echo "Usage: $0 [-R] <test_name>"
     echo
     echo "Options:"
-    echo "    <test_name>  Test to be ran. The same for 'ctest -R <test_name>'"
+    echo "    <test_name>  Test to be ran. The same for 'ctest -R <test_name>'. Specifying more than one test is an error."
+    echo "    -X           Arguments starting with a single dash are ignored.
+    echo "    --XXX        Arguments starting with a double dash are ignored.
     echo
     echo "Information:"
     echo "    For information and caveats, check README.md"
     exit 1
-fi
+}
 
-TEST_NAME="$1"
+while [[ $# -gt 0 ]]; do
+    if [[ "$1" = "--help" || "$1" = "-h"  ]]; then
+        print_usage
+    fi
+
+    if [[ "$1" =~ ^[^-].+ ]]; then
+        if [[ "${TEST_NAME:-}" = "" ]]; then
+            TEST_NAME="$1"
+        else
+            print_usage
+        fi
+    fi
+
+    shift
+done
+
+if [[ "${TEST_NAME:-}" = "" ]]; then
+    print_usage
+fi
 
 DUMP="$(ctest --show-only=json-v1 -R "$TEST_NAME" | jq ".tests")"
 
