@@ -2,12 +2,13 @@
 gdb-ctest - run _ctest_ inside _gdb_, including fixtures and environment
 
 ## Dependencies
-- jq
 - ctest
+- gdb
+- jq
 
 ## Installation
 - The script should work by itself - just copy it somewhere to your disk
-- There is a PKGBIULD for Arch linux - https://github.com/syyyr/gdb-ctest-aur
+- There is a PKGBIULD for Arch Linux - https://github.com/syyyr/gdb-ctest-aur
 
 ## Usage
 ```
