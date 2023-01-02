@@ -17,9 +17,10 @@ gdb-ctest <test_name>
 
 ## Options
 ```
-<test_name>  Test to be ran. The same for 'ctest -R <test_name>'. Specifying more than one test is an error.
--X           Arguments starting with a single dash are ignored.
---XXX        Arguments starting with a double dash are ignored.
+<test_name>  Test to be ran. The same for 'ctest -R <test_name>'. Specifying more than one test is an error."
+-h,--help    Shows help."
+-X           Other arguments starting with a single dash are ignored."
+--XXX        Other arguments starting with a double dash are ignored."
 ```
 
 ## Information/caveats

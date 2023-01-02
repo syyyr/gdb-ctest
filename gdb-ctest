@@ -31,8 +31,9 @@ print_usage()
     echo
     echo "Options:"
     echo "    <test_name>  Test to be ran. The same for 'ctest -R <test_name>'. Specifying more than one test is an error."
-    echo "    -X           Arguments starting with a single dash are ignored."
-    echo "    --XXX        Arguments starting with a double dash are ignored."
+    echo "    -h,--help    Shows this message."
+    echo "    -X           Other arguments starting with a single dash are ignored."
+    echo "    --XXX        Other arguments starting with a double dash are ignored."
     echo
     echo "Information:"
     echo "    For information and caveats, check README.md"
