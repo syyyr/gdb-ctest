@@ -105,17 +105,15 @@ if [[ -z "${TEST_COMMAND+x}" ]]; then
 fi
 
 FIXTURES_REQUIRED="$(get_test_property "$TEST_NAME" "FIXTURES_REQUIRED")"
-SETUP_NAME=
-CLEANUP_NAME=
 
 if [[ -n "$FIXTURES_REQUIRED" ]]; then
     SETUP_NAME="$(match_property "FIXTURES_SETUP" "$FIXTURES_REQUIRED")"
-    if [[ -n "$SETUP_NAME" ]]; then
+    if [[ -n "${SETUP_NAME+x}" ]]; then
         read -ra SETUP_COMMAND <<< "$(get_test_command "$SETUP_NAME")"
     fi
 
     CLEANUP_NAME="$(match_property "FIXTURES_CLEANUP" "$FIXTURES_REQUIRED")"
-    if [[ -n "$CLEANUP_NAME" ]]; then
+    if [[ -n "${CLEANUP_NAME+x}" ]]; then
         read -ra CLEANUP_COMMAND <<< "$(get_test_command "$CLEANUP_NAME")"
     fi
 fi
@@ -127,10 +125,7 @@ fi
 # echo "CLEANUP_NAME      = $CLEANUP_NAME"
 # echo "CLEANUP_COMMAND   = $CLEANUP_COMMAND"
 
-SETUP=
-CLEANUP=
-
-if [[ -n "$SETUP_NAME" ]]; then
+if [[ -n "${SETUP_NAME+x}" ]]; then
     read -ra SETUP <<< "$(get_test_property "$SETUP_NAME" "ENVIRONMENT")"
     SETUP=( "${SETUP[@]}" "${SETUP_COMMAND[@]}" )
     echo "Will run this to setup fixture '$FIXTURES_REQUIRED':"
@@ -141,7 +136,7 @@ read -ra TEST <<< "$(get_test_property "$TEST_NAME" "ENVIRONMENT")"
 TEST=( "${TEST[@]}"  gdb --args "${TEST_COMMAND[@]}" )
 echo "Will run this as the test command for '$TEST_NAME' (gdb is included):"
 echo "  $" "${TEST[@]}"
-if [[ -n "$CLEANUP_NAME" ]]; then
+if [[ -n "${CLEANUP_NAME+x}" ]]; then
     echo
     read -ra CLEANUP <<< "$(get_test_property "$CLEANUP_NAME" "ENVIRONMENT")"
     CLEANUP=( "${CLEANUP[@]}" "${CLEANUP_COMMAND[@]}" )
@@ -160,10 +155,10 @@ if ! [[ "$RESPONSE" =~ ^(yes|y)$ ]]; then
     exit 0
 fi
 
-if [[ -n "$SETUP_NAME" ]]; then
+if [[ -n "${SETUP_NAME+x}" ]]; then
     env "${SETUP[@]}"
 fi
 env "${TEST[@]}"
-if [[ -n "$CLEANUP_NAME" ]]; then
+if [[ -n "${CLEANUP_NAME+x}" ]]; then
     env "${CLEANUP[@]}"
 fi
