@@ -98,8 +98,8 @@ get_test_environment()
 }
 
 # TEST_JSON="$(get_test_json "$TEST_NAME")"
-TEST_COMMAND="$(get_test_command "$TEST_NAME")"
-if [[ -z "$TEST_COMMAND" ]]; then
+read -ra TEST_COMMAND <<< "$(get_test_command "$TEST_NAME")"
+if [[ -z "${TEST_COMMAND+x}" ]]; then
     echo "Couldn't find a test named '$TEST_NAME'"
     exit 1
 fi
@@ -111,12 +111,12 @@ CLEANUP_NAME=
 if [[ -n "$FIXTURES_REQUIRED" ]]; then
     SETUP_NAME="$(match_property "FIXTURES_SETUP" "$FIXTURES_REQUIRED")"
     if [[ -n "$SETUP_NAME" ]]; then
-        SETUP_COMMAND="$(get_test_command $SETUP_NAME)"
+        read -ra SETUP_COMMAND <<< "$(get_test_command "$SETUP_NAME")"
     fi
 
     CLEANUP_NAME="$(match_property "FIXTURES_CLEANUP" "$FIXTURES_REQUIRED")"
     if [[ -n "$CLEANUP_NAME" ]]; then
-        CLEANUP_COMMAND="$(get_test_command $CLEANUP_NAME)"
+        read -ra CLEANUP_COMMAND <<< "$(get_test_command "$CLEANUP_NAME")"
     fi
 fi
 # echo "TEST_NAME         = $TEST_NAME"
@@ -131,19 +131,22 @@ SETUP=
 CLEANUP=
 
 if [[ -n "$SETUP_NAME" ]]; then
-    SETUP="$(get_test_property "$SETUP_NAME" "ENVIRONMENT") $SETUP_COMMAND"
+    read -ra SETUP <<< "$(get_test_property "$SETUP_NAME" "ENVIRONMENT")"
+    SETUP=( "${SETUP[@]}" "${SETUP_COMMAND[@]}" )
     echo "Will run this to setup fixture '$FIXTURES_REQUIRED':"
-    echo "  $" $SETUP
+    echo "  $" "${SETUP[@]}"
     echo
 fi
-TEST="$(get_test_property "$TEST_NAME" "ENVIRONMENT") gdb --args $TEST_COMMAND"
+read -ra TEST <<< "$(get_test_property "$TEST_NAME" "ENVIRONMENT")"
+TEST=( "${TEST[@]}"  gdb --args "${TEST_COMMAND[@]}" )
 echo "Will run this as the test command for '$TEST_NAME' (gdb is included):"
-echo "  $" $TEST
+echo "  $" "${TEST[@]}"
 if [[ -n "$CLEANUP_NAME" ]]; then
     echo
-    CLEANUP="$(get_test_property "$CLEANUP_NAME" "ENVIRONMENT") $CLEANUP_COMMAND"
+    read -ra CLEANUP <<< "$(get_test_property "$CLEANUP_NAME" "ENVIRONMENT")"
+    CLEANUP=( "${CLEANUP[@]}" "${CLEANUP_COMMAND[@]}" )
     echo "Will run this to cleanup fixture '$FIXTURES_REQUIRED':"
-    echo "  $" $CLEANUP
+    echo "  $" "${CLEANUP[@]}"
 fi
 
 echo
@@ -158,9 +161,9 @@ if ! [[ "$RESPONSE" =~ ^(yes|y)$ ]]; then
 fi
 
 if [[ -n "$SETUP_NAME" ]]; then
-    env $SETUP
+    env "${SETUP[@]}"
 fi
-env $TEST
+env "${TEST[@]}"
 if [[ -n "$CLEANUP_NAME" ]]; then
-    env $CLEANUP
+    env "${CLEANUP[@]}"
 fi
