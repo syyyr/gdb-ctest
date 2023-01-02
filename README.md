@@ -8,7 +8,7 @@ gdb-ctest - run _ctest_ inside _gdb_, including fixtures and environment
 
 ## Installation
 - The script should work by itself - just copy it somewhere to your disk
-- There is a PKGBIULD for Arch Linux - https://github.com/syyyr/gdb-ctest-aur
+- There is a PKGBUILD for Arch Linux - https://aur.archlinux.org/packages/gdb-ctest-git
 
 ## Usage
 ```
