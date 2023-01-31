@@ -77,6 +77,11 @@ get_test_property()
     get_test_json "$1" | jq -r ".properties | map(select(.name == \"$2\"))[].value | join(\" \")"
 }
 
+get_test_property_str()
+{
+    get_test_json "$1" | jq -r ".properties | map(select(.name == \"$2\"))[].value"
+}
+
 match_property()
 {
     PROP_NAME="$1"
@@ -101,6 +106,8 @@ if [[ -z "${TEST_COMMAND+x}" ]]; then
 fi
 
 FIXTURES_REQUIRED="$(get_test_property "$TEST_NAME" "FIXTURES_REQUIRED")"
+WORKING_DIRECTORY="$(get_test_property_str "$TEST_NAME" WORKING_DIRECTORY)"
+WORKING_DIRECTORY=${WORKING_DIRECTORY:-.}
 
 if [[ -n "$FIXTURES_REQUIRED" ]]; then
     SETUP_NAME="$(match_property "FIXTURES_SETUP" "$FIXTURES_REQUIRED")"
@@ -132,6 +139,10 @@ read -ra TEST <<< "$(get_test_property "$TEST_NAME" "ENVIRONMENT")"
 TEST=( "${TEST[@]}"  gdb --args "${TEST_COMMAND[@]}" )
 echo "Will run this as the test command for '$TEST_NAME' (gdb is included):"
 echo "  $" "${TEST[@]}"
+if [[ "${WORKING_DIRECTORY}" != . ]]; then
+    echo
+    echo "in ${WORKING_DIRECTORY}"
+fi
 if [[ -n "${CLEANUP_NAME+x}" ]]; then
     echo
     read -ra CLEANUP <<< "$(get_test_property "$CLEANUP_NAME" "ENVIRONMENT")"
@@ -154,7 +165,9 @@ fi
 if [[ -n "${SETUP_NAME+x}" ]]; then
     env "${SETUP[@]}"
 fi
+pushd "${WORKING_DIRECTORY}"
 env "${TEST[@]}"
+popd
 if [[ -n "${CLEANUP_NAME+x}" ]]; then
     env "${CLEANUP[@]}"
 fi
