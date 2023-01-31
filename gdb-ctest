@@ -93,11 +93,6 @@ match_property()
     jq -r "map(select((.properties | map(select(.name == \"$PROP_NAME\" and .value[] == \"$PROP_VALUE\"))) != []))[].name" <<< "$DUMP"
 }
 
-get_test_environment()
-{
-    get_test_json "$1" | jq ".[].properties | map(select(.name == \"ENVIRONMENT\"))[].value"
-}
-
 # TEST_JSON="$(get_test_json "$TEST_NAME")"
 read -ra TEST_COMMAND <<< "$(get_test_command "$TEST_NAME")"
 if [[ -z "${TEST_COMMAND+x}" ]]; then
