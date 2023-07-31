@@ -23,6 +23,7 @@
 # SOFTWARE.
 
 set -eu
+shopt -s inherit_errexit
 
 print_usage()
 {
