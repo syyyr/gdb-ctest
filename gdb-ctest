@@ -127,6 +127,7 @@ if [[ -n "$FIXTURES_REQUIRED" ]]; then
         get_test_command "$CLEANUP_NAME" CLEANUP_NAME
     fi
 fi
+
 if [[ -n "${SETUP_NAME+x}" ]]; then
     read -ra SETUP <<< "$(get_test_property "$SETUP_NAME" "ENVIRONMENT")"
     SETUP+=( "${SETUP_COMMAND[@]}" )
@@ -134,6 +135,7 @@ if [[ -n "${SETUP_NAME+x}" ]]; then
     echo "  $" "${SETUP[@]}"
     echo
 fi
+
 read -ra TEST <<< "$(get_test_property "$TEST_NAME" "ENVIRONMENT")"
 TEST+=( gdb --args "${TEST_COMMAND[@]}" )
 echo "Will run this as the test command for '$TEST_NAME' (gdb is included):"
@@ -142,6 +144,7 @@ if [[ "${WORKING_DIRECTORY}" != . ]]; then
     echo
     echo "in ${WORKING_DIRECTORY}"
 fi
+
 if [[ -n "${CLEANUP_NAME+x}" ]]; then
     echo
     read -ra CLEANUP <<< "$(get_test_property "$CLEANUP_NAME" "ENVIRONMENT")"
