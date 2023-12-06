@@ -129,13 +129,13 @@ if [[ -n "$FIXTURES_REQUIRED" ]]; then
 fi
 if [[ -n "${SETUP_NAME+x}" ]]; then
     read -ra SETUP <<< "$(get_test_property "$SETUP_NAME" "ENVIRONMENT")"
-    SETUP=( "${SETUP[@]}" "${SETUP_COMMAND[@]}" )
+    SETUP+=( "${SETUP_COMMAND[@]}" )
     echo "Will run this to setup fixture '$FIXTURES_REQUIRED':"
     echo "  $" "${SETUP[@]}"
     echo
 fi
 read -ra TEST <<< "$(get_test_property "$TEST_NAME" "ENVIRONMENT")"
-TEST=( "${TEST[@]}"  gdb --args "${TEST_COMMAND[@]}" )
+TEST+=( gdb --args "${TEST_COMMAND[@]}" )
 echo "Will run this as the test command for '$TEST_NAME' (gdb is included):"
 echo "  $" "${TEST[@]}"
 if [[ "${WORKING_DIRECTORY}" != . ]]; then
@@ -145,7 +145,7 @@ fi
 if [[ -n "${CLEANUP_NAME+x}" ]]; then
     echo
     read -ra CLEANUP <<< "$(get_test_property "$CLEANUP_NAME" "ENVIRONMENT")"
-    CLEANUP=( "${CLEANUP[@]}" "${CLEANUP_COMMAND[@]}" )
+    CLEANUP+=( "${CLEANUP_COMMAND[@]}" )
     echo "Will run this to cleanup fixture '$FIXTURES_REQUIRED':"
     echo "  $" "${CLEANUP[@]}"
 fi
