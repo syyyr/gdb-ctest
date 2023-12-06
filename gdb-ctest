@@ -70,7 +70,13 @@ get_test_json()
 
 get_test_command()
 {
-    get_test_json "$1" | jq -r ".command | join(\" \")"
+    # Using --raw-output0 should be safe, because although JSON can contain null-bytes, AFAIK there's no way to put a
+    # null-byte inside a CMake string, which hopefully means that the JSON won't contain any.
+    local TEST_NAME="$1"
+    declare -n OUTPUT_VAR="$2"
+    # We're using it.
+    # shellcheck disable=SC2034
+    readarray -t -d "" OUTPUT_VAR < <(get_test_json "$1" | jq --raw-output0 ".command[]")
 }
 
 get_test_property()
@@ -99,12 +105,12 @@ match_property()
     jq -r "map(select((.properties | map(select(.name == \"$PROP_NAME\" and .value[] == \"$PROP_VALUE\"))) != []))[].name" <<< "$DUMP"
 }
 
-# TEST_JSON="$(get_test_json "$TEST_NAME")"
-read -ra TEST_COMMAND <<< "$(get_test_command "$TEST_NAME")"
-if [[ -z "${TEST_COMMAND+x}" ]]; then
+if ! jq --exit-status "map(select(.name == \"$TEST_NAME\"))[]" > /dev/null <<< "$DUMP"; then
     echo "Couldn't find a test named '$TEST_NAME'"
     exit 1
 fi
+
+get_test_command "$TEST_NAME" TEST_COMMAND
 
 FIXTURES_REQUIRED="$(get_test_property "$TEST_NAME" "FIXTURES_REQUIRED")"
 WORKING_DIRECTORY="$(get_test_property_str "$TEST_NAME" WORKING_DIRECTORY)"
@@ -113,12 +119,12 @@ WORKING_DIRECTORY=${WORKING_DIRECTORY:-.}
 if [[ -n "$FIXTURES_REQUIRED" ]]; then
     SETUP_NAME="$(match_property "FIXTURES_SETUP" "$FIXTURES_REQUIRED")"
     if [[ -n "${SETUP_NAME+x}" ]]; then
-        read -ra SETUP_COMMAND <<< "$(get_test_command "$SETUP_NAME")"
+        get_test_command "$SETUP_NAME" SETUP_COMMAND
     fi
 
     CLEANUP_NAME="$(match_property "FIXTURES_CLEANUP" "$FIXTURES_REQUIRED")"
     if [[ -n "${CLEANUP_NAME+x}" ]]; then
-        read -ra CLEANUP_COMMAND <<< "$(get_test_command "$CLEANUP_NAME")"
+        get_test_command "$CLEANUP_NAME" CLEANUP_NAME
     fi
 fi
 # echo "TEST_NAME         = $TEST_NAME"
