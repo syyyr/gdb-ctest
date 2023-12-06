@@ -81,7 +81,7 @@ get_test_command()
 
 get_test_property()
 {
-    get_test_json "$1" | jq -r ".properties | map(select(.name == \"$2\"))[].value | join(\" \")"
+    get_test_json "$1" | jq --raw-output0 ".properties | map(select(.name == \"$2\"))[].value[]"
 }
 
 get_test_property_str()
@@ -112,7 +112,10 @@ fi
 
 get_test_command "$TEST_NAME" TEST_COMMAND
 
-FIXTURES_REQUIRED="$(get_test_property "$TEST_NAME" "FIXTURES_REQUIRED")"
+readarray -t -d "" FIXTURES_REQUIRED_ARR < <(get_test_property "$TEST_NAME" "FIXTURES_REQUIRED")
+# We only support one fixture. Recursive resolving of fixtures would require rewriting the script into a normal
+# programming language.
+FIXTURES_REQUIRED="${FIXTURES_REQUIRED_ARR[0]}"
 WORKING_DIRECTORY="$(get_test_property_str "$TEST_NAME" WORKING_DIRECTORY)"
 WORKING_DIRECTORY=${WORKING_DIRECTORY:-.}
 
@@ -129,14 +132,14 @@ if [[ -n "$FIXTURES_REQUIRED" ]]; then
 fi
 
 if [[ -n "${SETUP_NAME+x}" ]]; then
-    read -ra SETUP <<< "$(get_test_property "$SETUP_NAME" "ENVIRONMENT")"
+    readarray -t -d "" SETUP < <(get_test_property "$SETUP_NAME" "ENVIRONMENT")
     SETUP+=( "${SETUP_COMMAND[@]}" )
     echo "Will run this to setup fixture '$FIXTURES_REQUIRED':"
     echo "  $" "${SETUP[@]}"
     echo
 fi
 
-read -ra TEST <<< "$(get_test_property "$TEST_NAME" "ENVIRONMENT")"
+readarray -t -d "" TEST < <(get_test_property "$TEST_NAME" "ENVIRONMENT")
 TEST+=( gdb --args "${TEST_COMMAND[@]}" )
 echo "Will run this as the test command for '$TEST_NAME' (gdb is included):"
 echo "  $" "${TEST[@]}"
@@ -147,7 +150,7 @@ fi
 
 if [[ -n "${CLEANUP_NAME+x}" ]]; then
     echo
-    read -ra CLEANUP <<< "$(get_test_property "$CLEANUP_NAME" "ENVIRONMENT")"
+    readarray -t -d "" CLEANUP < <(get_test_property "$CLEANUP_NAME" "ENVIRONMENT")
     CLEANUP+=( "${CLEANUP_COMMAND[@]}" )
     echo "Will run this to cleanup fixture '$FIXTURES_REQUIRED':"
     echo "  $" "${CLEANUP[@]}"
