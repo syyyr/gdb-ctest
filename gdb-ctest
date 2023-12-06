@@ -127,14 +127,6 @@ if [[ -n "$FIXTURES_REQUIRED" ]]; then
         get_test_command "$CLEANUP_NAME" CLEANUP_NAME
     fi
 fi
-# echo "TEST_NAME         = $TEST_NAME"
-# echo "TEST_COMMAND      = $TEST_COMMAND"
-# echo "FIXTURES_REQUIRED = $FIXTURES_REQUIRED"
-# echo "SETUP_NAME        = $SETUP_NAME"
-# echo "SETUP_COMMAND     = $SETUP_COMMAND"
-# echo "CLEANUP_NAME      = $CLEANUP_NAME"
-# echo "CLEANUP_COMMAND   = $CLEANUP_COMMAND"
-
 if [[ -n "${SETUP_NAME+x}" ]]; then
     read -ra SETUP <<< "$(get_test_property "$SETUP_NAME" "ENVIRONMENT")"
     SETUP=( "${SETUP[@]}" "${SETUP_COMMAND[@]}" )
