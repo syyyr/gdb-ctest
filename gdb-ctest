@@ -127,7 +127,7 @@ if [[ -n "$FIXTURES_REQUIRED" ]]; then
 
     CLEANUP_NAME="$(match_property "FIXTURES_CLEANUP" "$FIXTURES_REQUIRED")"
     if [[ -n "${CLEANUP_NAME+x}" ]]; then
-        get_test_command "$CLEANUP_NAME" CLEANUP_NAME
+        get_test_command "$CLEANUP_NAME" CLEANUP_COMMAND
     fi
 fi
 
