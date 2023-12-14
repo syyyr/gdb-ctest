@@ -115,7 +115,7 @@ get_test_command "$TEST_NAME" TEST_COMMAND
 readarray -t -d "" FIXTURES_REQUIRED_ARR < <(get_test_property_arr "$TEST_NAME" "FIXTURES_REQUIRED")
 # We only support one fixture. Recursive resolving of fixtures would require rewriting the script into a normal
 # programming language.
-FIXTURES_REQUIRED="${FIXTURES_REQUIRED_ARR[0]}"
+FIXTURES_REQUIRED="${FIXTURES_REQUIRED_ARR[0]:-}"
 WORKING_DIRECTORY="$(get_test_property_str "$TEST_NAME" WORKING_DIRECTORY)"
 WORKING_DIRECTORY=${WORKING_DIRECTORY:-.}
 
