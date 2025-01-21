@@ -31,7 +31,7 @@ print_usage()
     echo "Usage: $0 <test_name>"
     echo
     echo "Options:"
-    echo "    <test_name>  Test to be ran. The same for 'ctest -R <test_name>'. Specifying more than one test is an error."
+    echo "    <test_name>  Test to be run. The same for 'ctest -R <test_name>'. Specifying more than one test is an error."
     echo "    -h,--help    Shows this message."
     echo "    -X           Other arguments starting with a single dash are ignored."
     echo "    --XXX        Other arguments starting with a double dash are ignored."
